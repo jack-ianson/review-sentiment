@@ -25,4 +25,7 @@ def load_dataset(path: str | Path, n: int = None, shuffle: bool = True) -> pd.Da
 
     df.columns = ["label", "title", "review"]
 
+    # remove rows with NaN titles or reviews
+    df = df[(df["title"].str.strip() != "") & (df["review"].str.strip() != "")]
+
     return df

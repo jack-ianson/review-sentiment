@@ -1,0 +1,17 @@
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["review_analysis*"]
+
+[project]
+name = "review_analysis"
+version = "0.1.0"
+dependencies = [
+    "torch",
+    "transformers",
+    "fastapi",
+    "scikit-learn",
+    "pandas"
+]
+
+[project.scripts]
+train-nlp = "review_analysis.cli:main"

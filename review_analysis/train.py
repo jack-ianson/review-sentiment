@@ -2,10 +2,10 @@ from __future__ import annotations
 import torch
 
 
-from .loading import load_dataset
+from .datasets import load_dataset
 
 
-def train_model(data_root: str = None, validation: bool = True):
+def train_bag_of_words(data_root: str = None, validation: bool = True):
 
     # load the data
     if not data_root:

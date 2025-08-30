@@ -1,1 +1,1 @@
-from .loading import load_dataset
+from . import datasets

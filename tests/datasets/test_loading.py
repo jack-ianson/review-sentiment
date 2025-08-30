@@ -3,7 +3,7 @@ import pytest
 import torch
 import os
 
-from review_analysis import load_dataset
+from review_analysis.datasets import load_dataset
 
 
 def test_load_dataset():

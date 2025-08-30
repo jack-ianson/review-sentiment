@@ -1,6 +1,6 @@
 from __future__ import annotations
 import argparse
-from .train import train_model
+from .train import train_bag_of_words
 
 
 def main():
@@ -11,4 +11,4 @@ def main():
 
     args = parser.parse_args()
 
-    train_model(data_root=args.data_root)
+    train_bag_of_words(data_root=args.data_root)

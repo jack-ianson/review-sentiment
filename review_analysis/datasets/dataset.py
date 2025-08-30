@@ -29,4 +29,4 @@ class ReviewDataset(Dataset):
         title_ids = self.tokeniser.encode(title)
         review_ids = self.tokeniser.encode(review)
 
-        return title_ids, review_ids, label
+        return title_ids, review_ids, label - 1

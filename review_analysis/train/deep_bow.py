@@ -13,12 +13,12 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
     if not data_root:
         data_root = "data"
 
-    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=1000)
+    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=100000)
 
     if validation:
-        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=200)
+        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=20000)
     else:
-        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=200)
+        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=20000)
 
     print(
         f"Loaded {len(training_data)} training samples and {len(testing_data)} {'validation' if validation else 'testing'} samples."
@@ -33,7 +33,7 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
     testing_labels = testing_data["label"].tolist()
 
     # create the tokeniser and fit on the training data, this ensures no data leakage of new words
-    tokeniser = datasets.Tokeniser(max_vocab_size=1000)
+    tokeniser = datasets.Tokeniser(max_vocab_size=2500)
 
     tokeniser.fit_many(training_titles)
     tokeniser.fit_many(training_reviews)
@@ -77,7 +77,7 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
     )
 
     # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    device = torch.device("cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model.to(device)
 
@@ -123,7 +123,7 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
 
                 title_inputs = title_inputs.to(device)
                 review_inputs = review_inputs.to(device)
-                labels = torch.tensor(labels, dtype=torch.long).to(device)
+                labels = labels.to(device)
 
                 outputs = model(title_inputs, review_inputs)
                 _, predicted = torch.max(outputs.data, 1)

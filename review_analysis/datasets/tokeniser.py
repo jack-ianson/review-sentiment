@@ -42,4 +42,6 @@ class Tokeniser:
 
     @staticmethod
     def tokenise(text: str) -> list[int]:
+        if not isinstance(text, str):
+            text = "" if text is None else str(text)
         return re.findall(r"\b\w+\b", text.lower())

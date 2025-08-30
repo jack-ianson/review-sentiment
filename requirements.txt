@@ -1,0 +1,5 @@
+transformers
+fastapi
+scikit-learn
+pandas
+pytest

@@ -10,7 +10,7 @@ def test_tokeniser_1():
 
     text = "This is an example sentence for testing the Tokeniser. These are a few duplicate words: example example example."
 
-    tokeniser = Tokeniser(seq_len=10)
+    tokeniser = Tokeniser()
 
     tokeniser.fit_one(text)
 
@@ -21,10 +21,10 @@ def test_tokeniser_1():
     assert tokeniser.word2idx["this"] == 2
 
     encoded = tokeniser.encode("This is an unknown word.")
-    assert encoded == [2, 3, 4, 1, 1, 0, 0, 0, 0, 0]
+    assert encoded == [2, 3, 4, 1, 1]
 
     encoded = tokeniser.encode("example example example")
-    assert encoded == [5, 5, 5, 0, 0, 0, 0, 0, 0, 0]
+    assert encoded == [5, 5, 5]
 
 
 def test_tokeniser_2():
@@ -48,6 +48,31 @@ def test_tokeniser_2():
 
     encoded = tokeniser.encode("example example example")
     assert encoded == [5, 5, 5, 0, 0, 0, 0, 0, 0, 0]
+
+
+def test_tokeniser_3():
+
+    text_1 = "This is an example sentence for testing the Tokeniser."
+    text_2 = "These are a few duplicate words: example example example."
+    texts = ["This is an example", "test one two three", "another test example"]
+
+    tokeniser = Tokeniser()
+
+    tokeniser.fit_one(text_1)
+    tokeniser.fit_one(text_2)
+    tokeniser.fit_many(texts)
+
+    assert tokeniser.word2idx["<PAD>"] == 0
+    assert tokeniser.word2idx["<UNK>"] == 1
+
+    assert tokeniser.word2idx["example"] == 5
+    assert tokeniser.word2idx["this"] == 2
+
+    encoded = tokeniser.encode("This is an unknown word.")
+    assert encoded == [2, 3, 4, 1, 1]
+
+    encoded = tokeniser.encode("example example example")
+    assert encoded == [5, 5, 5]
 
 
 def test_tokeniser_max_vocab():

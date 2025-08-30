@@ -3,7 +3,7 @@ import re
 
 
 class Tokeniser:
-    def __init__(self, max_vocab_size: int = 5000, seq_len: int = 100):
+    def __init__(self, max_vocab_size: int = 5000, seq_len: int = None):
         self.max_vocab_size = max_vocab_size
         self.seq_len = seq_len
 
@@ -29,6 +29,9 @@ class Tokeniser:
         token_ids = [
             self.word2idx.get(token, self.word2idx["<UNK>"]) for token in tokens
         ]
+
+        if self.seq_len is None:
+            return token_ids
 
         if len(token_ids) < self.seq_len:
             token_ids += [self.word2idx["<PAD>"]] * (self.seq_len - len(token_ids))

@@ -23,4 +23,6 @@ def load_dataset(path: str | Path, n: int = None, shuffle: bool = True) -> pd.Da
     if n:
         df = df.head(n)
 
+    df.columns = ["label", "title", "review"]
+
     return df

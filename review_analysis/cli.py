@@ -1,6 +1,7 @@
 from __future__ import annotations
 import argparse
-from .train import train_bag_of_words
+
+from .train.bow import train_bag_of_words
 
 
 def main():

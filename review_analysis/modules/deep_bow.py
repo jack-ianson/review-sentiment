@@ -6,7 +6,7 @@ import torch.nn as nn
 class DeepBagOfWords(nn.Module):
     def __init__(
         self,
-        vocal_size: int,
+        vocab_size: int,
         embedding_dim: int,
         hidden_dims: list[int] | int,
         num_classes: int = 2,
@@ -16,7 +16,7 @@ class DeepBagOfWords(nn.Module):
         if isinstance(hidden_dims, int):
             hidden_dims = [hidden_dims]
 
-        self.embedding = nn.Embedding(vocal_size, embedding_dim)
+        self.embedding = nn.Embedding(vocab_size, embedding_dim)
 
         layers = nn.Sequential()
 

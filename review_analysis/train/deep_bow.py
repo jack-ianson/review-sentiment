@@ -56,23 +56,10 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
         labels=testing_labels,
         tokeniser=tokeniser,
     )
-
-    # # dataloaders
-    # train_dataloader = DataLoader(
-    #     training_dataset,
-    #     batch_size=4,
-    #     shuffle=True,
-    #     collate_fn=datasets.bow_collate_fn,
-    # )
-    # test_dataloader = DataLoader(
-    #     testing_dataset,
-    #     batch_size=4,
-    #     shuffle=False,
-    #     collate_fn=datasets.bow_collate_fn,
-    # )
+    #
 
     model = DeepBagOfWords(
-        vocal_size=len(tokeniser.word2idx),
+        vocab_size=len(tokeniser.word2idx),
         embedding_dim=64,
         hidden_dims=[128, 128],
         num_classes=2,

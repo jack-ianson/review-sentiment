@@ -2,9 +2,11 @@ from __future__ import annotations
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from pathlib import Path
 
 from .. import datasets
 from ..modules import DeepBagOfWords
+from ..trainer import ReviewsModelTrainer
 
 
 def train_bag_of_words(data_root: str = None, validation: bool = True):
@@ -13,12 +15,12 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
     if not data_root:
         data_root = "data"
 
-    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=100000)
+    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=10000)
 
     if validation:
-        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=20000)
+        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=2500)
     else:
-        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=20000)
+        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=2500)
 
     print(
         f"Loaded {len(training_data)} training samples and {len(testing_data)} {'validation' if validation else 'testing'} samples."
@@ -54,23 +56,10 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
         labels=testing_labels,
         tokeniser=tokeniser,
     )
-
-    # dataloaders
-    train_dataloader = DataLoader(
-        training_dataset,
-        batch_size=4,
-        shuffle=True,
-        collate_fn=datasets.bow_collate_fn,
-    )
-    test_dataloader = DataLoader(
-        testing_dataset,
-        batch_size=4,
-        shuffle=False,
-        collate_fn=datasets.bow_collate_fn,
-    )
+    #
 
     model = DeepBagOfWords(
-        vocal_size=len(tokeniser.word2idx),
+        vocab_size=len(tokeniser.word2idx),
         embedding_dim=64,
         hidden_dims=[128, 128],
         num_classes=2,
@@ -84,55 +73,19 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    num_epochs = 5
+    trainer = ReviewsModelTrainer(
+        model=model,
+        training_dataset=training_dataset,
+        testing_dataset=testing_dataset,
+        results_path="results/bow/test_1",
+        device=device,
+        collate_fn=datasets.bow_collate_fn,
+        batch_size=8,
+        optimiser=optimizer,
+        criterion=criterion,
+    )
 
-    for epoch in tqdm(range(num_epochs), desc="Epochs", unit="epoch"):
-        model.train()
-        total_loss = 0.0
+    trainer.train(epochs=10)
 
-        for batch in tqdm(train_dataloader, desc="Training", unit="batch", leave=False):
-            title_inputs, review_inputs, labels = batch
-
-            title_inputs = title_inputs.to(device)
-            review_inputs = review_inputs.to(device)
-            labels = labels.to(device)
-
-            optimizer.zero_grad()
-
-            outputs = model(title_inputs, review_inputs)
-
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-
-            total_loss += loss.item()
-
-        avg_loss = total_loss / len(train_dataloader)
-        # print(f"Epoch {epoch + 1}/{num_epochs}, Loss: {avg_loss:.4f}")
-
-        # Evaluation
-        model.eval()
-        correct = 0
-        total = 0
-
-        with torch.no_grad():
-            for batch in tqdm(
-                test_dataloader, desc="Evaluating", unit="batch", leave=False
-            ):
-                title_inputs, review_inputs, labels = batch
-
-                title_inputs = title_inputs.to(device)
-                review_inputs = review_inputs.to(device)
-                labels = labels.to(device)
-
-                outputs = model(title_inputs, review_inputs)
-                _, predicted = torch.max(outputs.data, 1)
-
-                total += labels.size(0)
-                correct += (predicted == labels).sum().item()
-
-        accuracy = 100 * correct / total
-
-        # print(
-        #     f"{'Validation' if validation else 'Test'} Accuracy after epoch {epoch + 1}: {accuracy:.2f}%"
-        # )
+    trainer.error_plot(path=Path("results/bow/test_1"))
+    trainer.accuracy_plot(path=Path("results/bow/test_1"))

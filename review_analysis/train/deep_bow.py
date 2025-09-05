@@ -9,18 +9,30 @@ from ..modules import DeepBagOfWords
 from ..trainer import ReviewsModelTrainer
 
 
-def train_bag_of_words(data_root: str = None, validation: bool = True):
+def train_bag_of_words(
+    data_root: str = None,
+    results_path: str | Path = None,
+    validation: bool = True,
+    epochs: int = 100,
+    batch_size: int = 16,
+    learning_rate: int = 0.001,
+):
 
     # load the data
     if not data_root:
         data_root = "data"
 
-    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=10000)
+    results_path = Path(results_path)
+
+    if not results_path.exists():
+        results_path.mkdir(parents=True, exist_ok=True)
+
+    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=20000)
 
     if validation:
-        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=2500)
+        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=4000)
     else:
-        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=2500)
+        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=4000)
 
     print(
         f"Loaded {len(training_data)} training samples and {len(testing_data)} {'validation' if validation else 'testing'} samples."
@@ -39,6 +51,8 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
 
     tokeniser.fit_many(training_titles)
     tokeniser.fit_many(training_reviews)
+
+    tokeniser.finalise_vocab()
 
     print(f"Vocabulary size: {len(tokeniser.word2idx)}")
 
@@ -71,21 +85,21 @@ def train_bag_of_words(data_root: str = None, validation: bool = True):
     model.to(device)
 
     criterion = torch.nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     trainer = ReviewsModelTrainer(
         model=model,
         training_dataset=training_dataset,
         testing_dataset=testing_dataset,
-        results_path="results/bow/test_1",
+        results_path=results_path,
         device=device,
         collate_fn=datasets.bow_collate_fn,
-        batch_size=8,
+        batch_size=batch_size,
         optimiser=optimizer,
         criterion=criterion,
     )
 
-    trainer.train(epochs=10)
+    trainer.train(epochs=epochs)
 
-    trainer.error_plot(path=Path("results/bow/test_1"))
-    trainer.accuracy_plot(path=Path("results/bow/test_1"))
+    trainer.error_plot(path=results_path)
+    trainer.accuracy_plot(path=results_path)

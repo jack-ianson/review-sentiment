@@ -185,8 +185,8 @@ class ReviewsModelTrainer:
             self._internal_state["current_epoch"] += 1
 
             if (
-                self._internal_state["current_epoch"] == 0
-                and (self._internal_state["current_epoch"]) % 1 == 0
+                self._internal_state["current_epoch"] != 0
+                and (self._internal_state["current_epoch"]) % 10 == 0
             ):
                 self.error_plot(path=self.results_path)
                 self.accuracy_plot(path=self.results_path)
@@ -395,7 +395,6 @@ class ReviewsModelTrainer:
         ax.legend()
         ax.set_xlabel("Epochs")
         ax.set_ylabel("Accuracy / %")
-        ax.set_yscale("log")
         ax.set_title("Accuracy")
 
         fig.savefig(path / "accuracy_plot.png")

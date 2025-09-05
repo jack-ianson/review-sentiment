@@ -1,6 +1,8 @@
 from __future__ import annotations
 import re
 from collections import Counter
+from pathlib import Path
+import json
 
 
 class Tokeniser:
@@ -14,16 +16,31 @@ class Tokeniser:
         self._vocal_finalised = False
 
     def fit_one(self, text: str):
+        """
+        Fit the tokeniser on a single text string.
+
+        Args:
+            text (str): input string
+        """
         tokens = self.tokenise(text)
         self._counter.update(tokens)
         self._vocal_finalised = False
 
     def fit_many(self, texts: list[str]):
+        """
+        Fit the tokeniser on a list of text strings.
+
+        Args:
+            texts (list[str]): list of strings
+        """
         for text in texts:
             self.fit_one(text)
         self._vocal_finalised = False
 
     def finalise_vocab(self):
+        """
+        Finalise the vocabulary by selecting the most common words up to max_vocab_size.
+        """
         if self._vocal_finalised:
             return
 
@@ -39,7 +56,15 @@ class Tokeniser:
         self._vocab_finalized = True
 
     def encode(self, text: str) -> list[int]:
+        """
+        Encode a text string into a list of token IDs, padding or truncating to seq_len if specified.
 
+        Args:
+            text (str): input string
+
+        Returns:
+            list[int]: list of token IDs
+        """
         if not self._vocal_finalised:
             self.finalise_vocab()
 
@@ -58,8 +83,39 @@ class Tokeniser:
 
         return token_ids
 
+    def save(self, path: str | Path):
+        """
+        Save the tokeniser configuration to a JSON file.
+
+        Args:
+            path (str | Path): the directory path to save the tokeniser configuration
+        """
+        path = Path(path)
+
+        with open(path / "tokeniser.json", "w", encoding="utf-8") as f:
+            json.dump(
+                {
+                    "max_vocab_size": self.max_vocab_size,
+                    "seq_len": self.seq_len,
+                    "word2idx": self.word2idx,
+                    "idx2word": self.idx2word,
+                },
+                f,
+                ensure_ascii=False,
+                indent=4,
+            )
+
     @staticmethod
     def tokenise(text: str) -> list[int]:
+        """
+        Tokenise a text string into a list of lowercase words.
+
+        Args:
+            text (str): input string
+
+        Returns:
+            list[int]: list of tokens
+        """
         if not isinstance(text, str):
             text = "" if text is None else str(text)
         return re.findall(r"\b\w+\b", text.lower())

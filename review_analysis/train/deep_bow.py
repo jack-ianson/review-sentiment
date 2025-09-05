@@ -103,3 +103,7 @@ def train_bag_of_words(
 
     trainer.error_plot(path=results_path)
     trainer.accuracy_plot(path=results_path)
+
+    # save the model
+    trainer.save_model(path=results_path)
+    trainer.save_checkpoint(path=results_path)

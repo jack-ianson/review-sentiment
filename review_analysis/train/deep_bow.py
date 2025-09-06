@@ -27,12 +27,12 @@ def train_bag_of_words(
     if not results_path.exists():
         results_path.mkdir(parents=True, exist_ok=True)
 
-    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=20000)
+    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=2000)
 
     if validation:
-        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=4000)
+        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=400)
     else:
-        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=4000)
+        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=400)
 
     print(
         f"Loaded {len(training_data)} training samples and {len(testing_data)} {'validation' if validation else 'testing'} samples."
@@ -107,3 +107,5 @@ def train_bag_of_words(
     # save the model
     trainer.save_model(path=results_path)
     trainer.save_checkpoint(path=results_path)
+
+    tokeniser.save(path=results_path)

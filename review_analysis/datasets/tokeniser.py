@@ -90,9 +90,13 @@ class Tokeniser:
         Args:
             path (str | Path): the directory path to save the tokeniser configuration
         """
-        path = Path(path)
 
-        with open(path / "tokeniser.json", "w", encoding="utf-8") as f:
+        if Path(path).name.endswith(".json"):
+            path = Path(path)
+        else:
+            path = Path(path) / "tokeniser.json"
+
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(
                 {
                     "max_vocab_size": self.max_vocab_size,
@@ -104,6 +108,28 @@ class Tokeniser:
                 ensure_ascii=False,
                 indent=4,
             )
+
+    def load(self, path: str | Path):
+        """
+        Load the tokeniser configuration from a JSON file.
+
+        Args:
+            path (str | Path): the file path to load the tokeniser configuration
+        """
+
+        if Path(path).is_dir():
+            path = Path(path) / "tokeniser.json"
+        else:
+            path = Path(path)
+
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+            self.max_vocab_size = data["max_vocab_size"]
+            self.seq_len = data["seq_len"]
+            self.word2idx = data["word2idx"]
+            self.idx2word = {int(k): v for k, v in data["idx2word"].items()}
+
+        self._vocal_finalised = True
 
     @staticmethod
     def tokenise(text: str) -> list[int]:

@@ -103,14 +103,14 @@ class ReviewsModelTrainer:
         # state of model for checkpointing
         self._internal_state = {"current_epoch": 0, "total_epochs": 0}
 
-    def train(self, epochs: int = 100, checkpoint_epoch: int = None):
+    def train(self, epochs: int = 100, checkpoint_interval: int = None):
         """
         Train the model. Handles both training and testing based
         on the datasets passed to the __init__ method.
 
         Args:
             epochs (int, optional): The number of epochs to train for. Defaults to 100.
-            checkpoint_epoch (int, optional): Frequency of checkpointing
+            checkpoint_interval (int, optional): Frequency of checkpointing
         """
 
         self._internal_state["total_epochs"] = (
@@ -186,10 +186,13 @@ class ReviewsModelTrainer:
 
             if (
                 self._internal_state["current_epoch"] != 0
-                and (self._internal_state["current_epoch"]) % 10 == 0
+                and (self._internal_state["current_epoch"]) % checkpoint_interval == 0
             ):
                 self.error_plot(path=self.results_path)
                 self.accuracy_plot(path=self.results_path)
+
+                self.save_checkpoint(path=self.results_path)
+                
 
         self.training_loss = self.training_loss.cpu()
         self.testing_loss = self.testing_loss.cpu()

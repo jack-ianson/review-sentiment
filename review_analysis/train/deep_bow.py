@@ -27,12 +27,12 @@ def train_bag_of_words(
     if not results_path.exists():
         results_path.mkdir(parents=True, exist_ok=True)
 
-    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=2000)
+    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=100000)
 
     if validation:
-        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=400)
+        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=25000)
     else:
-        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=400)
+        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=25000)
 
     print(
         f"Loaded {len(training_data)} training samples and {len(testing_data)} {'validation' if validation else 'testing'} samples."
@@ -47,7 +47,7 @@ def train_bag_of_words(
     testing_labels = testing_data["label"].tolist()
 
     # create the tokeniser and fit on the training data, this ensures no data leakage of new words
-    tokeniser = datasets.Tokeniser(max_vocab_size=2500)
+    tokeniser = datasets.Tokeniser(max_vocab_size=100000)
 
     tokeniser.fit_many(training_titles)
     tokeniser.fit_many(training_reviews)
@@ -55,6 +55,8 @@ def train_bag_of_words(
     tokeniser.finalise_vocab()
 
     print(f"Vocabulary size: {len(tokeniser.word2idx)}")
+    print(f"Total unique words: {tokeniser.total_word_count}")
+    print(f"Fraction of vocab used: {tokeniser.fraction_words_covered*100:.2f}%")
 
     # create the datasets
     training_dataset = datasets.ReviewDataset(
@@ -99,7 +101,7 @@ def train_bag_of_words(
         criterion=criterion,
     )
 
-    trainer.train(epochs=epochs)
+    trainer.train(epochs=epochs, checkpoint_interval=5)
 
     trainer.error_plot(path=results_path)
     trainer.accuracy_plot(path=results_path)

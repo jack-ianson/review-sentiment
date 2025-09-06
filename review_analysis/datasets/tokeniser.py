@@ -5,6 +5,9 @@ from pathlib import Path
 import json
 
 
+STOP_WORDS = ["i", "me", "my", "myself", "we", "our", "ours", "ourselves", "you", "your", "yours", "yourself", "yourselves", "he", "him", "his", "himself", "she", "her", "hers", "herself", "it", "its", "itself", "they", "them", "their", "theirs", "themselves", "what", "which", "who", "whom", "this", "that", "these", "those", "am", "is", "are", "was", "were", "be", "been", "being", "have", "has", "had", "having", "do", "does", "did", "doing", "a", "an", "the", "and", "but", "if", "or", "because", "as", "until", "while", "of", "at", "by", "for", "with", "about", "against", "between", "into", "through", "during", "before", "after", "above", "below", "to", "from", "up", "down", "in", "out", "on", "off", "over", "under", "again", "further", "then", "once", "here", "there", "when", "where", "why", "how", "all", "any", "both", "each", "few", "more", "most", "other", "some", "such", "nor", "not", "only", "own", "same", "so", "than", "too", "very", "s", "t", "can", "will", "just", "don", "should", "now"]
+
+
 class Tokeniser:
     def __init__(self, max_vocab_size: int = 5000, seq_len: int = None):
         self.max_vocab_size = max_vocab_size
@@ -144,4 +147,26 @@ class Tokeniser:
         """
         if not isinstance(text, str):
             text = "" if text is None else str(text)
-        return re.findall(r"\b\w+\b", text.lower())
+
+        words = re.findall(r"\b\w+\b", text.lower())        
+        return [word for word in words if word not in STOP_WORDS] 
+    
+    @property
+    def total_word_count(self) -> int:
+        """
+        The total number of unique words seen during fitting.
+
+        Returns:
+            int: Maximum word count
+        """
+        return len(self._counter)
+    
+    @property
+    def fraction_words_covered(self) -> float:
+        """
+        The fraction of words covered by the vocabulary.
+
+        Returns:
+            float: Fraction of words covered
+        """
+        return self.max_vocab_size / self.total_word_count 

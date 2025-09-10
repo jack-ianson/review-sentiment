@@ -16,6 +16,7 @@ def train_bag_of_words(
     epochs: int = 100,
     batch_size: int = 16,
     learning_rate: int = 0.001,
+    cache_data: bool = False
 ):
 
     # load the data
@@ -27,12 +28,12 @@ def train_bag_of_words(
     if not results_path.exists():
         results_path.mkdir(parents=True, exist_ok=True)
 
-    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=100000)
+    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=250000)
 
     if validation:
-        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=25000)
+        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=50000)
     else:
-        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=25000)
+        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=50000)
 
     print(
         f"Loaded {len(training_data)} training samples and {len(testing_data)} {'validation' if validation else 'testing'} samples."
@@ -47,7 +48,7 @@ def train_bag_of_words(
     testing_labels = testing_data["label"].tolist()
 
     # create the tokeniser and fit on the training data, this ensures no data leakage of new words
-    tokeniser = datasets.Tokeniser(max_vocab_size=100000)
+    tokeniser = datasets.Tokeniser(max_vocab_size=20000)
 
     tokeniser.fit_many(training_titles)
     tokeniser.fit_many(training_reviews)
@@ -58,12 +59,16 @@ def train_bag_of_words(
     print(f"Total unique words: {tokeniser.total_word_count}")
     print(f"Fraction of vocab used: {tokeniser.fraction_words_covered*100:.2f}%")
 
+    tokeniser.save(path=results_path)
+
+
     # create the datasets
     training_dataset = datasets.ReviewDataset(
         titles=training_titles,
         reviews=training_reviews,
         labels=training_labels,
         tokeniser=tokeniser,
+        precompute_tokens=True
     )
 
     testing_dataset = datasets.ReviewDataset(
@@ -71,13 +76,23 @@ def train_bag_of_words(
         reviews=testing_reviews,
         labels=testing_labels,
         tokeniser=tokeniser,
+        precompute_tokens=True
     )
-    #
+
+    
+    # create cache path
+    if cache_data:
+        cached_data_path = Path(f"{data_root}/cached_tokens")
+        cached_data_path.mkdir()
+
+        training_dataset.cache_tokenisation(f"{data_root}/cached_tokens/training_tokens.pt")
+        training_dataset.cache_tokenisation(f"{data_root}/cached_tokens/{'validation' if validation else 'testing'}_tokens.pt")
+
 
     model = DeepBagOfWords(
         vocab_size=len(tokeniser.word2idx),
-        embedding_dim=64,
-        hidden_dims=[128, 128],
+        embedding_dim=128,
+        hidden_dims=[128, 256, 128],
         num_classes=2,
     )
 
@@ -89,19 +104,26 @@ def train_bag_of_words(
     criterion = torch.nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
+    if training_dataset.cache_tokenisation:
+        print("Using cached tokenisation collate function.")
+        collate_fn = datasets.bow_collate_cached_fn
+    else:
+        collate_fn = datasets.bow_collate_fn
+
     trainer = ReviewsModelTrainer(
         model=model,
         training_dataset=training_dataset,
         testing_dataset=testing_dataset,
         results_path=results_path,
         device=device,
-        collate_fn=datasets.bow_collate_fn,
+        collate_fn=collate_fn,
         batch_size=batch_size,
         optimiser=optimizer,
         criterion=criterion,
     )
+    
 
-    trainer.train(epochs=epochs, checkpoint_interval=5)
+    trainer.train(epochs=epochs, checkpoint_interval=20)
 
     trainer.error_plot(path=results_path)
     trainer.accuracy_plot(path=results_path)
@@ -110,4 +132,3 @@ def train_bag_of_words(
     trainer.save_model(path=results_path)
     trainer.save_checkpoint(path=results_path)
 
-    tokeniser.save(path=results_path)

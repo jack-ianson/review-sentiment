@@ -16,7 +16,7 @@ class Tokeniser:
         self.word2idx = {"<PAD>": 0, "<UNK>": 1}
         self.idx2word = {0: "<PAD>", 1: "<UNK>"}
         self._counter = Counter()
-        self._vocal_finalised = False
+        self._vocab_finalised = False
 
     def fit_one(self, text: str):
         """
@@ -27,7 +27,7 @@ class Tokeniser:
         """
         tokens = self.tokenise(text)
         self._counter.update(tokens)
-        self._vocal_finalised = False
+        self._vocab_finalised = False
 
     def fit_many(self, texts: list[str]):
         """
@@ -38,13 +38,13 @@ class Tokeniser:
         """
         for text in texts:
             self.fit_one(text)
-        self._vocal_finalised = False
+        self._vocab_finalised = False
 
     def finalise_vocab(self):
         """
         Finalise the vocabulary by selecting the most common words up to max_vocab_size.
         """
-        if self._vocal_finalised:
+        if self._vocab_finalised:
             return
 
         most_common = self._counter.most_common(self.max_vocab_size - 2)
@@ -68,7 +68,7 @@ class Tokeniser:
         Returns:
             list[int]: list of token IDs
         """
-        if not self._vocal_finalised:
+        if not self._vocab_finalised:
             self.finalise_vocab()
 
         tokens = self.tokenise(text)
@@ -132,7 +132,7 @@ class Tokeniser:
             self.word2idx = data["word2idx"]
             self.idx2word = {int(k): v for k, v in data["idx2word"].items()}
 
-        self._vocal_finalised = True
+        self._vocab_finalised = True
 
     @staticmethod
     def tokenise(text: str) -> list[int]:
@@ -151,22 +151,4 @@ class Tokeniser:
         words = re.findall(r"\b\w+\b", text.lower())        
         return [word for word in words if word not in STOP_WORDS] 
     
-    @property
-    def total_word_count(self) -> int:
-        """
-        The total number of unique words seen during fitting.
 
-        Returns:
-            int: Maximum word count
-        """
-        return len(self._counter)
-    
-    @property
-    def fraction_words_covered(self) -> float:
-        """
-        The fraction of words covered by the vocabulary.
-
-        Returns:
-            float: Fraction of words covered
-        """
-        return self.max_vocab_size / self.total_word_count 

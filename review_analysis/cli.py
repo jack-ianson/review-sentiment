@@ -33,6 +33,7 @@ def main():
         help="Learning rate for the optimizer.",
     )
     parser.add_argument("--cache_data", action="store_true", default=False, help="whether to cache data or not")
+    parser.add_argument("--load_cached_data", action="store_true", default=False, help="whether to use loaded cached data")
 
     args = parser.parse_args()
 
@@ -43,5 +44,6 @@ def main():
         epochs=args.epochs,
         batch_size=args.batch_size,
         learning_rate=args.learning_rate,
-        cache_data=args.cache_data
+        cache_data=args.cache_data,
+        load_cached_data=args.load_cached_data
     )

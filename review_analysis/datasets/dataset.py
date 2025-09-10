@@ -9,8 +9,8 @@ from .tokeniser import Tokeniser
 class ReviewDataset(Dataset):
     def __init__(
         self,
-        titles: list[str],
-        reviews: list[str],
+        titles: list[str] | list[torch.Tensor],
+        reviews: list[str] | list[torch.Tensor],
         labels: list[int],
         tokeniser: Tokeniser,
         precompute_tokens: bool = False,
@@ -21,7 +21,7 @@ class ReviewDataset(Dataset):
         self.tokeniser = tokeniser
         self.precompute_tokens = precompute_tokens
 
-        if precompute_tokens:
+        if precompute_tokens and not isinstance(titles[0], torch.Tensor):
             self.titles = [torch.tensor(self.tokeniser.encode(title)) for title in tqdm(titles, desc="Tokenising titles", total=len(self.titles))]
             self.reviews = [torch.tensor(self.tokeniser.encode(review)) for review in tqdm(reviews, desc="Tokenising reviews", total=len(self.reviews))]
 
@@ -34,7 +34,7 @@ class ReviewDataset(Dataset):
         review = self.reviews[index]
         label = self.labels[index]
         
-        if not self.precompute_tokens:
+        if not self.precompute_tokens and not isinstance(self.titles[0], torch.Tensor):
             title = self.tokeniser.encode(title)
             review = self.tokeniser.encode(review)
 
@@ -44,7 +44,7 @@ class ReviewDataset(Dataset):
 
         path = Path(path)
 
-        if self.precompute_tokens:
+        if isinstance(self.titles[0], torch.Tensor):
             torch.save({
                 "titles": self.titles,
                 "reviews": self.reviews,
@@ -56,4 +56,5 @@ class ReviewDataset(Dataset):
             if path.name.endswith(".pt"):
                 self.tokeniser.save(path.parent)
             
+
 

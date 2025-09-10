@@ -16,7 +16,8 @@ def train_bag_of_words(
     epochs: int = 100,
     batch_size: int = 16,
     learning_rate: int = 0.001,
-    cache_data: bool = False
+    cache_data: bool = False,   
+    load_cached_data: bool = True,
 ):
 
     # load the data
@@ -28,36 +29,60 @@ def train_bag_of_words(
     if not results_path.exists():
         results_path.mkdir(parents=True, exist_ok=True)
 
-    training_data = datasets.load_dataset(f"{data_root}/train.csv", n=250000)
+    if load_cached_data:
+        print("Loading cached data...")
+        training_data = torch.load(f"{data_root}/cached_tokens/training_tokens.pt")
 
-    if validation:
-        testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=50000)
+        if validation:
+            testing_data = torch.load(f"{data_root}/cached_tokens/validation_tokens.pt")
+        else:
+            testing_data = torch.load(f"{data_root}/cached_tokens/testing_tokens.pt")
+
+        print("Loaded cached data.")
+
+        training_titles = training_data["titles"]
+        training_reviews = training_data["reviews"]
+        training_labels = training_data["labels"]
+
+        testing_titles = testing_data["titles"]
+        testing_reviews = testing_data["reviews"]
+        testing_labels = testing_data["labels"]
+
+
     else:
-        testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=50000)
+        training_data = datasets.load_dataset(f"{data_root}/train.csv", n=250000)
 
-    print(
-        f"Loaded {len(training_data)} training samples and {len(testing_data)} {'validation' if validation else 'testing'} samples."
-    )
+        if validation:
+            testing_data = datasets.load_dataset(f"{data_root}/val.csv", n=50000)
+        else:
+            testing_data = datasets.load_dataset(f"{data_root}/test.csv", n=50000)
 
-    training_titles = training_data["title"].tolist()
-    training_reviews = training_data["review"].tolist()
-    training_labels = training_data["label"].tolist()
+        print(
+            f"Loaded {len(training_data)} training samples and {len(testing_data)} {'validation' if validation else 'testing'} samples."
+        )
 
-    testing_titles = testing_data["title"].tolist()
-    testing_reviews = testing_data["review"].tolist()
-    testing_labels = testing_data["label"].tolist()
+        training_titles = training_data["title"].tolist()
+        training_reviews = training_data["review"].tolist()
+        training_labels = training_data["label"].tolist()
+
+        testing_titles = testing_data["title"].tolist()
+        testing_reviews = testing_data["review"].tolist()
+        testing_labels = testing_data["label"].tolist()
 
     # create the tokeniser and fit on the training data, this ensures no data leakage of new words
-    tokeniser = datasets.Tokeniser(max_vocab_size=20000)
+    if load_cached_data:
+        tokeniser = datasets.Tokeniser()
+        tokeniser.load(f"{data_root}/cached_tokens/tokeniser.json")
+    
+    else:
+        tokeniser = datasets.Tokeniser(max_vocab_size=20000)
 
-    tokeniser.fit_many(training_titles)
-    tokeniser.fit_many(training_reviews)
+        tokeniser.fit_many(training_titles)
+        tokeniser.fit_many(training_reviews)
 
-    tokeniser.finalise_vocab()
+        tokeniser.finalise_vocab()
 
     print(f"Vocabulary size: {len(tokeniser.word2idx)}")
-    print(f"Total unique words: {tokeniser.total_word_count}")
-    print(f"Fraction of vocab used: {tokeniser.fraction_words_covered*100:.2f}%")
 
     tokeniser.save(path=results_path)
 
@@ -68,7 +93,7 @@ def train_bag_of_words(
         reviews=training_reviews,
         labels=training_labels,
         tokeniser=tokeniser,
-        precompute_tokens=True
+        precompute_tokens=False if load_cached_data else True
     )
 
     testing_dataset = datasets.ReviewDataset(
@@ -76,12 +101,12 @@ def train_bag_of_words(
         reviews=testing_reviews,
         labels=testing_labels,
         tokeniser=tokeniser,
-        precompute_tokens=True
+        precompute_tokens=False if load_cached_data else True
     )
 
     
     # create cache path
-    if cache_data:
+    if cache_data and not load_cached_data:
         cached_data_path = Path(f"{data_root}/cached_tokens")
         cached_data_path.mkdir()
 

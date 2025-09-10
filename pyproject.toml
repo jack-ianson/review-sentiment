@@ -10,7 +10,7 @@ dependencies = [
     "transformers",
     "fastapi",
     "scikit-learn",
-    "pandas"
+    "pandas",
     "uvicorn",
 ]
 

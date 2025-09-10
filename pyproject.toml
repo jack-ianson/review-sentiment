@@ -12,6 +12,7 @@ dependencies = [
     "scikit-learn",
     "pandas",
     "uvicorn",
+    "pytest",
 ]
 
 [project.scripts]

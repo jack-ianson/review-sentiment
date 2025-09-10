@@ -4,3 +4,4 @@ fastapi
 scikit-learn
 pandas
 uvicorn
+pytest

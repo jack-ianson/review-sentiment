@@ -1,3 +1,4 @@
+from __future__ import annotations
 import torch
 
 
@@ -40,7 +41,6 @@ def bow_collate_cached_fn(batch) -> tuple[torch.Tensor, torch.Tensor, torch.Tens
     for idx, (title_id, review_id) in enumerate(zip(title_ids, review_ids)):
         padded_title_ids[idx, : len(title_id)] = title_id
         padded_review_ids[idx, : len(review_id)] = review_id
-        
 
     labels = [l[0] if isinstance(l, (list, tuple)) else l for l in labels]
     labels = torch.tensor(labels, dtype=torch.long)

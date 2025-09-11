@@ -19,12 +19,14 @@ class BagOfWordsInference:
 
         self.model = DeepBagOfWords(
             vocab_size=len(self.tokeniser.word2idx),
-            embedding_dim=64,
-            hidden_dims=[128, 128],
+            embedding_dim=128,
+            hidden_dims=[128, 256, 128],
             num_classes=2,
         )
 
-        self.model.load_state_dict(torch.load(model_path, map_location="cpu"))
+        self.model.load_state_dict(
+            torch.load(model_path, map_location="cpu")["model_state_dict"]
+        )
         self.model.to(device)
 
         self.model.eval()

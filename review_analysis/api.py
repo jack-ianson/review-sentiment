@@ -6,8 +6,8 @@ from .inference import BagOfWordsInference
 
 
 model = BagOfWordsInference(
-    model_path="./model_stores/model.pt",
-    tokeniser_path="./model_stores/tokeniser.json",
+    model_path="./model_stores/deep_bow/model.pt",
+    tokeniser_path="./model_stores/deep_bow/tokeniser.json",
     device="cpu",
 )
 
